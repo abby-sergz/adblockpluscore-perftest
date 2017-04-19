@@ -9,6 +9,7 @@ Requirements
 * Python 2.7
 * Firefox 40 or higher
 * [marionette_driver Python module](https://marionette-client.readthedocs.io/en/master/#getting-the-client)
+* [jinja2 Python module](http://jinja.pocoo.org/docs/2.9/intro/#installation)
 
 How to use
 ----------
