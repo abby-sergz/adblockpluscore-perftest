@@ -5,7 +5,9 @@ import json
 import os
 import subprocess
 import urllib
+import webbrowser
 
+import jinja2
 from marionette_driver.marionette import Marionette
 
 BASE_DIR = os.path.dirname(__file__)
@@ -147,4 +149,11 @@ if __name__ == '__main__':
     result = {}
     result.update(run_node_tests())
     result.update(run_browser_tests())
-    print(result)
+
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(BASE_DIR),
+                             autoescape=True)
+    template = env.get_template('result.html.tmpl')
+    result_url = 'data:text/html,' + urllib.quote(template.render({
+        'result': result,
+    }))
+    webbrowser.open(result_url)
