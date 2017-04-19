@@ -44,7 +44,6 @@
       {
         let memoryLayout = require("compiled").getMemoryLayout();
         result.memEmscriptenUsed = memoryLayout.dynamic_top;
-        result.memEmscriptenTotal = memoryLayout.total_memory;
       }
       catch (e)
       {
