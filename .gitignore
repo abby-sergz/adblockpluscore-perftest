@@ -1,0 +1,5 @@
+/node_modules/
+easylist.txt
+lib_classic.js
+lib_emscripten.js
+gecko.log

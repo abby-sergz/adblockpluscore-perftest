@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import json
+import os
+import subprocess
+
+from marionette_driver.marionette import Marionette
+
+BASE_DIR = os.path.dirname(__file__)
+CLASSIC_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore', 'lib')
+EMSCRIPTEN_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore-emscripten',
+                              'lib')
+TEST_SCRIPT = os.path.join(BASE_DIR, 'node_test.js')
+BROWSERIFY = os.path.join(BASE_DIR, 'node_modules', '.bin', 'browserify')
+
+classic_env = {'NODE_PATH': CLASSIC_LIB}
+emscripten_env = {'NODE_PATH': EMSCRIPTEN_LIB}
+
+
+def get_median(results):
+    median = {}
+    for key in results[0].keys():
+        data = sorted(entry[key] for entry in results)
+        if len(data) % 2 == 0:
+            median[key] = (0.5 * data[len(data) // 2 - 1] +
+                           0.5 * data[len(data) // 2])
+        else:
+            median[key] = data[len(data) // 2]
+    return median
+
+
+def run_node_tests():
+    def run_node_test(env):
+        result = subprocess.check_output([
+            '/usr/bin/node', '--expose-gc', TEST_SCRIPT
+        ], env=env)
+        return json.loads(result.decode('utf-8'))
+
+    classic_results = []
+    emscripten_results = []
+    for i in range(10):
+        classic_results.append(run_node_test(classic_env))
+        emscripten_results.append(run_node_test(emscripten_env))
+    print('Node.js, classic code: ', get_median(classic_results))
+    print('Node.js, Emscripten code: ', get_median(emscripten_results))
+
+
+def run_browser_tests():
+    if not os.path.exists(BROWSERIFY):
+        subprocess.check_call(['/usr/bin/npm', 'install', 'browserify'],
+                              cwd=BASE_DIR)
+
+    subprocess.check_call([
+        BROWSERIFY,
+        '-o', os.path.join(BASE_DIR, 'lib_classic.js'),
+        '-r', 'filterClasses'
+    ], env=classic_env)
+    subprocess.check_call([
+        BROWSERIFY,
+        '-o', os.path.join(BASE_DIR, 'lib_emscripten.js'),
+        '-r', 'filterClasses', '-r', 'compiled'
+    ], env=emscripten_env)
+
+    driver = Marionette(app='fxdesktop', bin='/usr/bin/firefox')
+    driver.start_session()
+    driver.timeout.implicit = 10
+
+    def run_browser_test(test_type):
+        driver.navigate('file://{}?{}'.format(
+            os.path.abspath(os.path.join(BASE_DIR, 'browser_test.html')),
+            test_type
+        ))
+        driver.find_element('id', 'ready')
+        driver.navigate('javascript:void(runTest())')
+        result = driver.find_element('id', 'done').get_attribute('data-result')
+        return json.loads(result)
+
+    classic_results = []
+    emscripten_results = []
+    try:
+        for i in range(10):
+            classic_results.append(run_browser_test('classic'))
+            emscripten_results.append(run_browser_test('emscripten'))
+        print('Firefox, classic code: ', get_median(classic_results))
+        print('Firefox, Emscripten code: ', get_median(emscripten_results))
+    finally:
+        driver.cleanup()
+
+
+if __name__ == '__main__':
+    run_node_tests()
+    run_browser_tests()
