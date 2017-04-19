@@ -16,6 +16,7 @@ EASYLIST = os.path.join(BASE_DIR, 'easylist.txt')
 NODE_TEST_SCRIPT = os.path.join(BASE_DIR, 'node_test.js')
 BROWSER_TEST_PAGE = os.path.join(BASE_DIR, 'browser_test.html')
 BROWSERIFY = os.path.join(BASE_DIR, 'node_modules', '.bin', 'browserify')
+NUM_ITERATIONS = 10
 
 classic_env = {'NODE_PATH': CLASSIC_LIB}
 emscripten_env = {'NODE_PATH': EMSCRIPTEN_LIB}
@@ -42,11 +43,13 @@ def run_node_tests():
 
     classic_results = []
     emscripten_results = []
-    for i in range(10):
+    for i in range(NUM_ITERATIONS):
         classic_results.append(run_node_test(classic_env))
         emscripten_results.append(run_node_test(emscripten_env))
-    print('Node.js, classic code: ', get_median(classic_results))
-    print('Node.js, Emscripten code: ', get_median(emscripten_results))
+    return {
+        'Node.js, classic code': get_median(classic_results),
+        'Node.js, Emscripten code': get_median(emscripten_results),
+    }
 
 
 def run_browser_tests():
@@ -124,11 +127,13 @@ def run_browser_tests():
     classic_results = []
     emscripten_results = []
     try:
-        for i in range(10):
+        for i in range(NUM_ITERATIONS):
             classic_results.append(run_browser_test('classic'))
             emscripten_results.append(run_browser_test('emscripten'))
-        print('Firefox, classic code: ', get_median(classic_results))
-        print('Firefox, Emscripten code: ', get_median(emscripten_results))
+        return {
+            'Firefox, classic code': get_median(classic_results),
+            'Firefox, Emscripten code': get_median(emscripten_results),
+        }
     finally:
         driver.cleanup()
 
@@ -139,5 +144,7 @@ if __name__ == '__main__':
             'https://easylist-downloads.adblockplus.org/easylist.txt',
             EASYLIST
         )
-    run_node_tests()
-    run_browser_tests()
+    result = {}
+    result.update(run_node_tests())
+    result.update(run_browser_tests())
+    print(result)
