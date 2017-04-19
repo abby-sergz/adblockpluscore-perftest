@@ -69,14 +69,57 @@ def run_browser_tests():
     driver.start_session()
     driver.timeout.implicit = 10
 
+    def minimize_memory(driver):
+        with driver.using_context(driver.CONTEXT_CHROME):
+            driver.execute_async_script(r'''
+                const Cc = Components.classes;
+                const Ci = Components.interfaces;
+                let manager = Cc["@mozilla.org/memory-reporter-manager;1"]
+                                .getService(Ci.nsIMemoryReporterManager);
+                manager.minimizeMemoryUsage(marionetteScriptFinished);
+            ''')
+
+    def get_memory_usage(driver, url):
+        with driver.using_context(driver.CONTEXT_CHROME):
+            return driver.execute_async_script(r'''
+                const Cc = Components.classes;
+                const Ci = Components.interfaces;
+                let manager = Cc["@mozilla.org/memory-reporter-manager;1"]
+                                .getService(Ci.nsIMemoryReporterManager);
+                let url = arguments[0].replace(/\//g, "\\");
+                let memory = 0;
+                manager.getReports((process, path, kind, units, amount,
+                                    description, data) =>
+                {
+                    if (units == Ci.nsIMemoryReporter.UNITS_BYTES &&
+                        path.includes(url))
+                    {
+                        memory += amount;
+                    }
+                }, null, data =>
+                {
+                    marionetteScriptFinished(memory);
+                }, null,false);
+            ''', [url])
+
     def run_browser_test(test_type):
-        driver.navigate('file://{}?{}'.format(
+        result = {}
+        url = 'file://{}?{}'.format(
             os.path.abspath(BROWSER_TEST_PAGE), test_type
-        ))
+        )
+        driver.navigate(url)
         driver.find_element('id', 'ready')
+        minimize_memory(driver)
+        result['memLoaded'] = get_memory_usage(driver, url)
         driver.navigate('javascript:void(runTest())')
-        result = driver.find_element('id', 'done').get_attribute('data-result')
-        return json.loads(result)
+        result.update(json.loads(
+            driver.find_element('id', 'done').get_attribute('data-result')
+        ))
+
+        minimize_memory(driver)
+        result['memFinal'] = get_memory_usage(driver, url)
+
+        return result
 
     classic_results = []
     emscripten_results = []

@@ -7,7 +7,7 @@ Requirements
 ------------
 * Node.js 7.0 or higher
 * Python 2.7
-* Firefox with Marionette support (meaning any reasonably recent version)
+* Firefox 40 or higher
 * [marionette_driver Python module](https://marionette-client.readthedocs.io/en/master/#getting-the-client)
 
 How to use
