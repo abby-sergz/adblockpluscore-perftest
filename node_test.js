@@ -9,8 +9,7 @@ function toMB(bytes)
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
-let memory = process.memoryUsage();
-result.memInitial = memory.heapUsed + memory.external;
+let memoryInitial = process.memoryUsage();
 
 let {Filter} = require("filterClasses");
 global.gc();
@@ -22,8 +21,9 @@ let [seconds, nanos] = process.hrtime(startTime);
 result.time = seconds + nanos / 1000000000;
 
 global.gc();
-memory = process.memoryUsage();
-result.memFinal = memory.heapUsed + memory.external;
+let memoryFinal = process.memoryUsage();
+result.memory = memoryFinal.heapUsed + memoryFinal.external -
+                memoryInitial.heapUsed - memoryInitial.external;
 
 try
 {
