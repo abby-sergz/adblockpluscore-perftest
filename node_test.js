@@ -9,10 +9,11 @@ function toMB(bytes)
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
+let memory = process.memoryUsage();
+result.memInitial = memory.heapUsed + memory.external;
+
 let {Filter} = require("filterClasses");
 global.gc();
-let memory = process.memoryUsage();
-result.memLoaded = memory.heapUsed + memory.external;
 
 let startTime = process.hrtime()
 for (let line of data)
@@ -35,3 +36,6 @@ catch (e)
 }
 
 console.log(JSON.stringify(result));
+
+// Prevent data from being garbage collected until this point
+data[0] += "";

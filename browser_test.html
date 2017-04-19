@@ -4,14 +4,6 @@
 </head>
 <body>
   <script>
-    var script = document.createElement("script");
-    script.async = false;
-    if (location.search == "?emscripten")
-      script.src = "lib_emscripten.js";
-    else
-      script.src = "lib_classic.js";
-    document.body.appendChild(script);
-
     var data = null;
     var request = new XMLHttpRequest();
     request.open("GET", "easylist.txt");
@@ -29,31 +21,40 @@
 
     function runTest()
     {
-      let {Filter} = require("filterClasses");
+      var script = document.createElement("script");
+      if (location.search == "?emscripten")
+        script.src = "lib_emscripten.js";
+      else
+        script.src = "lib_classic.js";
+      document.body.appendChild(script);
+      script.onload = () =>
+      {
+        let {Filter} = require("filterClasses");
 
-      let startTime = performance.now()
-      for (let line of data)
-        Filter.fromText(line);
+        let startTime = performance.now()
+        for (let line of data)
+          Filter.fromText(line);
 
-      let seconds = (performance.now() - startTime) / 1000;
-      let result = {
-        time: seconds
+        let seconds = (performance.now() - startTime) / 1000;
+        let result = {
+          time: seconds
+        };
+
+        try
+        {
+          let memoryLayout = require("compiled").getMemoryLayout();
+          result.memEmscriptenUsed = memoryLayout.dynamic_top;
+        }
+        catch (e)
+        {
+          // Not Emscripten
+        }
+
+        let done = document.createElement("div");
+        done.id = "done";
+        done.setAttribute("data-result", JSON.stringify(result));
+        document.body.appendChild(done);
       };
-
-      try
-      {
-        let memoryLayout = require("compiled").getMemoryLayout();
-        result.memEmscriptenUsed = memoryLayout.dynamic_top;
-      }
-      catch (e)
-      {
-        // Not Emscripten
-      }
-
-      let done = document.createElement("div");
-      done.id = "done";
-      done.setAttribute("data-result", JSON.stringify(result));
-      document.body.appendChild(done);
     };
   </script>
 </body>

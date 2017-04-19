@@ -18,7 +18,7 @@ EASYLIST = os.path.join(BASE_DIR, 'easylist.txt')
 NODE_TEST_SCRIPT = os.path.join(BASE_DIR, 'node_test.js')
 BROWSER_TEST_PAGE = os.path.join(BASE_DIR, 'browser_test.html')
 BROWSERIFY = os.path.join(BASE_DIR, 'node_modules', '.bin', 'browserify')
-NUM_ITERATIONS = 10
+NUM_ITERATIONS = 2
 
 classic_env = {'NODE_PATH': CLASSIC_LIB}
 emscripten_env = {'NODE_PATH': EMSCRIPTEN_LIB}
@@ -115,7 +115,7 @@ def run_browser_tests():
         driver.navigate(url)
         driver.find_element('id', 'ready')
         minimize_memory(driver)
-        result['memLoaded'] = get_memory_usage(driver, url)
+        result['memInitial'] = get_memory_usage(driver, url)
         driver.navigate('javascript:void(runTest())')
         result.update(json.loads(
             driver.find_element('id', 'done').get_attribute('data-result')
