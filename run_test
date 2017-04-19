@@ -4,6 +4,7 @@ from __future__ import print_function
 import json
 import os
 import subprocess
+import urllib
 
 from marionette_driver.marionette import Marionette
 
@@ -11,6 +12,7 @@ BASE_DIR = os.path.dirname(__file__)
 CLASSIC_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore', 'lib')
 EMSCRIPTEN_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore-emscripten',
                               'lib')
+EASYLIST = os.path.join(BASE_DIR, 'easylist.txt')
 TEST_SCRIPT = os.path.join(BASE_DIR, 'node_test.js')
 BROWSERIFY = os.path.join(BASE_DIR, 'node_modules', '.bin', 'browserify')
 
@@ -89,5 +91,10 @@ def run_browser_tests():
 
 
 if __name__ == '__main__':
+    if not os.path.exists(EASYLIST):
+        urllib.urlretrieve(
+            'https://easylist-downloads.adblockplus.org/easylist.txt',
+            EASYLIST
+        )
     run_node_tests()
     run_browser_tests()
