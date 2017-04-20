@@ -1,7 +1,7 @@
 let fs = require("fs");
 let path = require("path");
 
-let data = fs.readFileSync(path.join(__dirname, "easylist.txt"), "utf-8").split(/[\r\n]+/).slice(1);
+let data = fs.readFileSync(path.join(__dirname, "data", "easylist.txt"), "utf-8").split(/[\r\n]+/).slice(1);
 let result = {};
 
 function toMB(bytes)

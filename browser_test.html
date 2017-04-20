@@ -6,7 +6,7 @@
   <script>
     var data = null;
     var request = new XMLHttpRequest();
-    request.open("GET", "easylist.txt");
+    request.open("GET", "data/easylist.txt");
     request.overrideMimeType("text/plain");
     request.requestType ="text";
     request.onload = function()
@@ -23,9 +23,9 @@
     {
       var script = document.createElement("script");
       if (location.search == "?emscripten")
-        script.src = "lib_emscripten.js";
+        script.src = "data/lib_emscripten.js";
       else
-        script.src = "lib_classic.js";
+        script.src = "data/lib_classic.js";
       document.body.appendChild(script);
       script.onload = () =>
       {

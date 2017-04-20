@@ -11,14 +11,15 @@ import jinja2
 from marionette_driver.marionette import Marionette
 
 BASE_DIR = os.path.dirname(__file__)
+DATA_DIR = os.path.join(BASE_DIR, 'data')
 CLASSIC_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore', 'lib')
 EMSCRIPTEN_LIB = os.path.join(BASE_DIR, '..', 'adblockpluscore-emscripten',
                               'lib')
-EASYLIST = os.path.join(BASE_DIR, 'easylist.txt')
+EASYLIST = os.path.join(DATA_DIR, 'easylist.txt')
 NODE_TEST_SCRIPT = os.path.join(BASE_DIR, 'node_test.js')
 BROWSER_TEST_PAGE = os.path.join(BASE_DIR, 'browser_test.html')
-BROWSERIFY = os.path.join(BASE_DIR, 'node_modules', '.bin', 'browserify')
-NUM_ITERATIONS = 10
+BROWSERIFY = os.path.join(DATA_DIR, 'node_modules', '.bin', 'browserify')
+NUM_ITERATIONS = 2
 
 classic_env = {'NODE_PATH': CLASSIC_LIB}
 emscripten_env = {'NODE_PATH': EMSCRIPTEN_LIB}
@@ -57,20 +58,21 @@ def run_node_tests():
 def run_browser_tests():
     if not os.path.exists(BROWSERIFY):
         subprocess.check_call(['/usr/bin/npm', 'install', 'browserify'],
-                              cwd=BASE_DIR)
+                              cwd=DATA_DIR)
 
     subprocess.check_call([
         BROWSERIFY,
-        '-o', os.path.join(BASE_DIR, 'lib_classic.js'),
+        '-o', os.path.join(DATA_DIR, 'lib_classic.js'),
         '-r', 'filterClasses'
     ], env=classic_env)
     subprocess.check_call([
         BROWSERIFY,
-        '-o', os.path.join(BASE_DIR, 'lib_emscripten.js'),
+        '-o', os.path.join(DATA_DIR, 'lib_emscripten.js'),
         '-r', 'filterClasses', '-r', 'compiled'
     ], env=emscripten_env)
 
-    driver = Marionette(app='fxdesktop', bin='/usr/bin/firefox')
+    driver = Marionette(app='fxdesktop', bin='/usr/bin/firefox',
+                        gecko_log=os.path.join(DATA_DIR, 'gecko.log'))
     driver.start_session()
     driver.timeout.implicit = 10
 
@@ -140,6 +142,9 @@ def run_browser_tests():
 
 
 if __name__ == '__main__':
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+
     if not os.path.exists(EASYLIST):
         urllib.urlretrieve(
             'https://easylist-downloads.adblockplus.org/easylist.txt',
