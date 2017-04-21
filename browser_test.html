@@ -4,24 +4,27 @@
 </head>
 <body>
   <script>
-    var data = null;
-    var request = new XMLHttpRequest();
-    request.open("GET", "data/easylist.txt");
-    request.overrideMimeType("text/plain");
-    request.requestType ="text";
-    request.onload = function()
+    let data = null;
+    function loadData()
     {
-      data = request.response.split(/[\r\n]+/).slice(1);
+      let request = new XMLHttpRequest();
+      request.open("GET", "data/easylist.txt");
+      request.overrideMimeType("text/plain");
+      request.requestType ="text";
+      request.onload = function()
+      {
+        data = request.response.split(/[\r\n]+/).slice(1);
 
-      let ready = document.createElement("div");
-      ready.id = "ready";
-      document.body.appendChild(ready);
-    };
-    request.send();
+        let ready = document.createElement("div");
+        ready.id = "ready";
+        document.body.appendChild(ready);
+      };
+      request.send();
+    }
 
     function runTest()
     {
-      var script = document.createElement("script");
+      let script = document.createElement("script");
       if (location.search == "?emscripten")
         script.src = "data/lib_emscripten.js";
       else
@@ -39,6 +42,7 @@
         let result = {
           time: seconds
         };
+        data = null;
 
         try
         {
