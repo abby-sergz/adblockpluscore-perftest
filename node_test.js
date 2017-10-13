@@ -1,10 +1,10 @@
 let fs = require("fs");
 let path = require("path");
 
-let memoryInitial = process.memoryUsage();
+let result = {};
+result.memoryInitial = process.memoryUsage();
 
 let data = fs.readFileSync(path.join(__dirname, "data", "easylist.txt"), "utf-8").split(/[\r\n]+/).slice(1);
-let result = {};
 
 function toMB(bytes)
 {
@@ -22,9 +22,12 @@ result.time = seconds + nanos / 1000000000;
 
 data = null;
 global.gc();
-let memoryFinal = process.memoryUsage();
-result.memory = memoryFinal.heapUsed + memoryFinal.external -
-                memoryInitial.heapUsed - memoryInitial.external;
+result.memoryFinal = process.memoryUsage();
+result.diff = {
+  memory: result.memoryFinal  .heapUsed + result.memoryFinal  .external -
+          result.memoryInitial.heapUsed - result.memoryInitial.external,
+  rss: result.memoryFinal.rss - result.memoryInitial.rss
+};
 
 try
 {

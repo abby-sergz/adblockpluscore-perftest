@@ -31,9 +31,19 @@ emscripten_env = {'NODE_PATH': EMSCRIPTEN_LIB}
 
 
 def get_median(results):
+    print(results)
     median = {}
-    for key in results[0].keys():
-        data = sorted(entry[key] for entry in results)
+    def join_keys(prev, key):
+        return (prev + ":" if prev is not None else "") + key
+    def flatten_properties(obj, prev_key=None):
+        for key in obj.keys():
+            if isinstance(obj[key], dict):
+                for sub_key, value_getter in flatten_properties(obj[key], key):
+                    yield sub_key, lambda entry: value_getter(entry[key])
+                continue
+            yield join_keys(prev_key, key), lambda entry: entry[key]
+    for key, value_getter in flatten_properties(results[0]):
+        data = sorted(value_getter(entry) for entry in results)
         if len(data) % 2 == 0:
             median[key] = (0.5 * data[len(data) // 2 - 1] +
                            0.5 * data[len(data) // 2])
@@ -163,7 +173,8 @@ if __name__ == '__main__':
         )
     result = {}
     result.update(run_node_tests(args.iterations))
-    result.update(run_browser_tests(args.iterations))
+    print(result)
+#    result.update(run_browser_tests(args.iterations))
 
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(BASE_DIR),
                              autoescape=True)
